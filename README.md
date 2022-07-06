@@ -279,18 +279,18 @@ Hands-on practice quest #01: pre-built disk image lifecycle <sup>30 + 5</sup>
 - [ ] Given пары участников
 
 - [ ] When участники именуют сценарии, выполняют команды и анализируют их вывод и поведение
-- Сценарий "Как ...?"
+- Сценарий "Как посмотреть доступные образы?"
 ```shell
 docker image ls # TODO: собственные пометки участников для будущего использования в проектах
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как обновить образ до последнего состояния и посмотреть, что что-то поменялось?"
 ```shell
 docker image pull alpine
 docker image ls
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как посмотреть историю изменения образа alpine, как посмотреть метаданные образа alpine, как вывести конкретную информацию из метаданных с форматированием?"
 ```shell
 docker image history alpine
 
@@ -298,49 +298,49 @@ docker image inspect alpine
 docker image inspect --format='{{.Id}} -> {{.Parent}}' alpine
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как создать свой образ на основе образа alpine, как посмотреть изменения сделанные в образе до коммита?"
 ```shell
 docker container run --name demo -it alpine
 /# touch side-effect.txt
 /# exit
 docker container diff demo
-docker container commit demo {{ registry-account }}/demo
+docker container commit demo pitmov/demo
 docker image ls
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как создать еще один тег для конкретного image?"
 ```shell
-docker image tag {{ registry-account }}/demo:latest {{ registry-account }}/demo:1.0.0
+docker image tag pitmov/demo:latest pitmov/demo:1.0.0
 docker image ls
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как запушить образ в дефолтный докер хаб?"
 ```shell
-docker image push {{ registry-account }}/demo:1.0.0
+docker image push pitmov/demo:1.0.0
 ```
 
-- Сценарий "Как ...?"
+- Сценарий "Как удалить образ и освободить место, как удалить конкретный тег у образа, как удалить все образы, у которых нет хотя бы одного контейнера?"
 ```shell
 docker image ls
 docker container rm demo
 docker image prune
 docker image ls
-docker image rm {{ registry-account }}/demo:1.0.0
+docker image rm pitmov/demo:1.0.0
 docker image ls
-docker image rm {{ registry-account }}/demo:latest
+docker image rm pitmov/demo:latest
 docker image ls
 docker image prune --all
 ```
 
 - [ ] Then участники делятся проблемами и отвечают на вопросы
-- Как назвали сценарии?
-- Какие способы идентификации образа?
-- Какой тег у образа по умолчанию при создании коммитом?
-- Какой тег у образа по умолчанию при операции `pull`?
-- В чем физический смысл удаления образа командой `rm`?
-- Всегда ли удаляется образ по команде `rm`?
-- Что делает prune?
-- Что такое [_dangling_](https://docs.docker.com/config/pruning/#prune-images) image?
+- Как назвали сценарии? Выше
+- Какие способы идентификации образа? По тегу, по ид
+- Какой тег у образа по умолчанию при создании коммитом? latest или такой же какой был у оригинального обрза
+- Какой тег у образа по умолчанию при операции `pull`? latest
+- В чем физический смысл удаления образа командой `rm`? Образ удаляется из локального репозитория образов (как бы логическое удаление)
+- Всегда ли удаляется образ по команде `rm`? не удаляется в том случае если есть использование каким либо контейнером
+- Что делает prune? физически удаляет файлы образа, теги и очищает место на диске
+- Что такое [_dangling_](https://docs.docker.com/config/pruning/#prune-images) image? A dangling image is one that is not tagged and is not referenced by any container.
 
 
 Жизненный цикл контейнера <sup>45</sup>
@@ -600,13 +600,13 @@ nano base/Dockerfile
 # - install package `openjdk11-jre-headless` with `apk add`
 
 docker image build \
- --tag {{ registry-account }}/base:1.0.0 \ # -t
+ --tag pitmov/base:1.0.0 \ # -t
  ./base # folder where Dockerfile located
 ```
 
 - Сценарий "Как опубликовать образ в репозитории?"
 ```shell
-docker image push {{ registry-account }}/base:1.0.0
+docker image push pitmov/base:1.0.0
 ```
 
 - [ ] Then 
@@ -636,7 +636,7 @@ nano backend/Dockerfile # TODO fix FROM directive to new base image
 - Сценарий "Как собрать свой образ с приложением на базе Dockerfile?"
 ```shell
 docker image build \
- --tag {{ registry-account }}/backend:1.0.0 \ # -t
+ --tag pitmov/backend:1.0.0 \ # -t
  ./backend
 ```
 
@@ -654,7 +654,7 @@ docker container run \
  --publish 8080:8080 \ # -p [host address:]8080:8080
  --env SPRING_PROFILES_ACTIVE=qa \ # -e: в контейнере действует переменная окружения
  --volume $(pwd)/log:/dbo/log \ # -v: папка в конейнере /dbo/log отображена на папку на хосте /current-path/log. Windows caution for $()!
- {{ registry-account }}/backend:1.0.0 \ #  репозиторий и тег
+ pitmov/backend:1.0.0 \ #  репозиторий и тег
  --spring.profiles.active=qa # параметры командной строки
 ```
 
@@ -753,10 +753,10 @@ cd application
 - Сценарий "Как ...?"
 ```shell
 nano backend/Dockerfile # TODO fix default Spring profile to `preprod` instead of `qa`
-docker image build --tag {{ registry-account }}/backend:1.0.0 ./backend
+docker image build --tag pitmov/backend:1.0.0 ./backend
 
 nano stub/Dockerfile # TODO fix FROM for new custom base image
-docker image build --tag {{ registry-account }}/stub:1.0.0 ./stub
+docker image build --tag pitmov/stub:1.0.0 ./stub
 ```
 
 - Сценарий "Как ...?"
@@ -775,7 +775,7 @@ docker container run \
  --detach \
  --name stub \
  --publish 8888:8888 \
- {{ registry-account }}/stub:1.0.0
+ pitmov/stub:1.0.0
 curl localhost:8888/api/account [| jq]
 
 docker container run \
@@ -787,7 +787,7 @@ docker container run \
  --env SPRING_DATASOURCE_USERNAME=dbo \
  --env SPRING_DATASOURCE_PASSWORD=dbo \
  --env SPRING_INTEGRATION_LEGACYACCOUNTINGSYSTEM_BASEURL="http://$(hostname -i):8888/api" \
- {{ registry-account }}/backend:1.0.0 \
+ pitmov/backend:1.0.0 \
    --spring.profiles.active=preprod # необязательно, установили как дефолт командной строки запуска в Dockerfile
 
 curl -H "X-API-VERSION:1" localhost:8080/dbo/actuator/health [| jq]
@@ -897,7 +897,7 @@ docker container run \
  --detach \
  --network my_deployment \
  --name stub \
- {{ registry-account }}/stub:1.0.0
+ pitmov/stub:1.0.0
  
 docker container run \
  --detach \
@@ -908,7 +908,7 @@ docker container run \
  --env SPRING_DATASOURCE_USERNAME=dbo \
  --env SPRING_DATASOURCE_PASSWORD=dbo \
  --env SPRING_INTEGRATION_LEGACYACCOUNTINGSYSTEM_BASEURL="http://stub:8888/api" \ # hostname instead of external ip is the result of virtualizing network
- {{ registry-account }}/backend:1.0.0
+ pitmov/backend:1.0.0
    --spring.profiles.active=preprod
 ```
 
@@ -916,14 +916,14 @@ docker container run \
 nano proxy/Dockerfile #TODOs
 nano proxy/nginx.conf.template #TODOs
 
-docker image build --tag {{ registry-account }}/proxy:1.0.0 ./proxy
+docker image build --tag pitmov/proxy:1.0.0 ./proxy
 
 docker container run \
  --detach \
  --network my_deployment \
  --name proxy \
  --publish 80:80 \ # Notice mandatory port mapping
- {{ registry-account }}/proxy:1.0.0
+ pitmov/proxy:1.0.0
 ```
 
 ```shell
